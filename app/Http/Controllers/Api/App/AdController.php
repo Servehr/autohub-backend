@@ -112,9 +112,9 @@ class AdController extends Controller
             $decodedImage = base64_decode($imgSplit);
             $path='/product/' . $photo;
             file_put_contents(public_path().'/product/'.$photo, $decodedImage);
-            array_push($all_images, url($path));
+            array_push($all_images, $photo);
         }
-
+        
         if($input["others"] != "")
         {
             $newManufacturer = CarMake::create(
@@ -293,7 +293,7 @@ class AdController extends Controller
             Images::create([
               'user_id' => Auth::id(),
               'product_id' => $request->productId,
-              'image_url' => $image_url
+              'image_url' => $picture
             ]);
             $newlyAddedImage = Images::where('product_id', $request->productId)->get();
             return response()->json(['success' => 1, 'message' => 'Product Image successfully updated', 'data'=>$newlyAddedImage]);
@@ -321,7 +321,7 @@ class AdController extends Controller
 
             $image_url = url($path.$picture);
 
-            User::where('id', Auth::id())->update(['avatar' => $image_url]);
+            User::where('id', Auth::id())->update(['avatar' => $picture]);
             $changeImage = User::where('id', Auth::id())->pluck('avatar');
             return response()->json(['success' => 1, 'message' => 'Product Image successfully updated', 'data'=>$changeImage]);
         } else {
@@ -631,28 +631,28 @@ class AdController extends Controller
         $data->save();
         $product['product']['detail'] = $data;
         $product['product']['images'] = Images::where('product_id', $data->id)->pluck('image_url');
-        $product['product']['vendor_followers'] = $this->following($data->user_id);
+        $product['product']['vendor_follower'] = ($this->following(Auth::id()) === "Yes") ? "Yes" : "No";
         $product['product']['products'] = Product::where(["status" => 'active', 'featured' => 1])->inRandomOrder()->limit(5)->with('lga', 'state', 'category')->get();
         return response()->json(['success' => 1, 'message' => $data->user_id, 'data'=>$product]);
     }
 
     function userToFollow(Request $request)
     {
-        // return response()->json(['success' => 1, 'message' => "Really", 'data'=> "Great"]);
+        // return response()->json(['success' => 1, 'message' => "Really", 'data'=> $request->all()]);
         $input['user'] = Auth::id();
         $input['vendor'] = $request->vendor;
         // return response()->json(['success' => 1, 'message' => "Really", 'data'=> $this->following($request->vendor)]);
         if($this->following($request->vendor) === "Yes")
         {
            Follower::where('user', Auth::id())->where('vendor', $request->vendor)->delete();
-           return response()->json(['success' => 1, 'message' => 'Unfollow', 'data'=>$this->following($request->vendor)]);
+           return response()->json(['success' => 1, 'message' => 'Unfollow', 'data'=>'']);
         } else {
                Follower::create($input);
             // $follow = new Follower();
             // $follow->user = Auth::id();
             // $follow->vendor = $request->vendor;
             // $follow->save();
-           return response()->json(['success' => 1, 'message' => 'Following', 'data'=>$this->following($request->vendor)]);
+           return response()->json(['success' => 1, 'message' => 'Following', 'data'=>'']);
         }
     }
 
