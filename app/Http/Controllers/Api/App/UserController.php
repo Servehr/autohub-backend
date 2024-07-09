@@ -121,7 +121,7 @@ class UserController extends Controller
         $path='/avatar/' . $photo;
         file_put_contents(public_path().'/avatar/'.$photo, $decodedImage);
 
-        User::where('id', $request->id)->update(['avatar' => url($path)]);
+        User::where('id', $request->id)->update(['avatar' => $photo]);
 
 
         // $user->avatar="https://".env('FTP_HOST')."/".$path;
