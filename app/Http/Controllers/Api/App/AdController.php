@@ -631,18 +631,20 @@ class AdController extends Controller
         $data->save();
         $product['product']['detail'] = $data;
         $product['product']['images'] = Images::where('product_id', $data->id)->pluck('image_url');
-        $product['product']['vendor_follower'] = ($this->following(Auth::id()) === "Yes") ? "Yes" : "No";
+        // $flw = $this->following($request->vendor);
+        $product['product']['vendor_follower'] = $this->following(28);
         $product['product']['products'] = Product::where(["status" => 'active', 'featured' => 1])->inRandomOrder()->limit(5)->with('lga', 'state', 'category')->get();
         return response()->json(['success' => 1, 'message' => $data->user_id, 'data'=>$product]);
     }
 
     function userToFollow(Request $request)
     {
-        // return response()->json(['success' => 1, 'message' => "Really", 'data'=> $request->all()]);
+        // return response()->json(['success' => 1, 'message' => "Really", 'data'=> $this->following($request->vendor)]);
         $input['user'] = Auth::id();
         $input['vendor'] = $request->vendor;
         // return response()->json(['success' => 1, 'message' => "Really", 'data'=> $this->following($request->vendor)]);
-        if($this->following($request->vendor) === "Yes")
+        $flw = $this->following($request->vendor);
+        if($flw > 0)
         {
            Follower::where('user', Auth::id())->where('vendor', $request->vendor)->delete();
            return response()->json(['success' => 1, 'message' => 'Unfollow', 'data'=>'']);
@@ -656,23 +658,23 @@ class AdController extends Controller
         }
     }
 
+    function userFollowerCount($id)
+    {
+        $isFollowing = DB::table('followers')->where('user', Auth::id())->where('vendor', $id)->get();
+        return response()->json(['success' => 1, 'message' => '', 'follower'=> count($isFollowing)]);
+    }
+
     function following($vendor)
     {
-        $isFollowing = DB::table('followers')->where('user', Auth::id())->where('vendor', $vendor)->exists();
-        if($isFollowing)
-        {
-           return "Yes";
-        } else {
-           return "No";
-        }
+        $isFollowing = DB::table('followers')->where('user', Auth::id())->where('vendor', $vendor)->get();
+        return count($isFollowing);
     }
 
 
 
-    function moreFromVendor($id){
-
+    function moreFromVendor($id)
+    {   
         $find=Product::find($id);
-
         if(!$find){
             return response()->json(['success' => 0, 'message' => 'Invalid Product']);
         }

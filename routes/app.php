@@ -54,6 +54,7 @@ Route::prefix("app")->group(function () {
 
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('/follow', [AdController::class, 'userToFollow']);
+        Route::get('/user-follower-count/{id}', [AdController::class, 'userFollowerCount']);
         Route::get('/chat-list', [ChatController::class, 'chatList']);
         Route::get('/conversations/{id}', [ChatController::class, 'conversations']);
         Route::post('send-message', [ChatController::class, 'sendMessage']);
