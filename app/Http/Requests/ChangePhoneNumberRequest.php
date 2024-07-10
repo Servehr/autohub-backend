@@ -30,7 +30,7 @@ class ChangePhoneNumberRequest extends FormRequest
       return [
           //
           'phone' => 'required|string',
-          'password' => 'required|min:8'
+          'password' => 'required|min:6'
       ];
   }
 

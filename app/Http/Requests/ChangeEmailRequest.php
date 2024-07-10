@@ -30,7 +30,7 @@ class ChangeEmailRequest extends FormRequest
       return [
           //
           'email' => 'required|string|max:35',
-          'password' => 'required|min:8'
+          'password' => 'required|min:6'
       ];
   }
 

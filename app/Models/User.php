@@ -40,6 +40,11 @@ class User extends Authenticatable
         return $this->belongsTo(Service::class, 'specialization');
     }
 
+    public function persin()
+    {
+        return $this->hasMany(Persin::class, 'user_id', 'id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

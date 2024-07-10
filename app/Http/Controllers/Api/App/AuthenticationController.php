@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Qualification;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\Persin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -56,9 +57,14 @@ class AuthenticationController extends Controller
         $token = $user->createToken("app")->plainTextToken;
         User::where('id', $user->id)->update(['online' => 1 ]);
 
-        $x = User::where('id', $user->id)->first();
+        $x = User::where('id', $user->id)->with('persin')->first();
+        $psn = [];
+        foreach ($x->persin as $value) 
+        {
+            array_push($psn, $value->name);
+        }
 
-        return response()->json(['success' => 1, 'message' => 'Login successfully', 'token' => $token, 'data' => $x]);
+        return response()->json(['success' => 1, 'message' => 'Login successfully', 'token' => $token, 'data' => $x, 'persin' => count($psn)]);
     }
 
     public function vendorRegister(RegisterRequest $request)
@@ -266,8 +272,14 @@ class AuthenticationController extends Controller
         $biz['cac_number']=$input["company_cac"];
 //        $biz['nata']=$input["company_nata"];
 
-        if (Company::create($biz)) {
-            // successfully inserted into database
+        if (Company::create($biz)) 
+        {
+            // successfully inserted into database           
+
+            $userz['user_id'] = $user->id;
+            $userz['name'] = $create["type"];
+            Persin::create($userz);
+
             $token = $user->createToken("app")->plainTextToken;
 
             return response()->json(['success' => 1, 'message' => 'Account created successfully', 'token'=>$token, 'id' => $user->id]);
@@ -308,6 +320,10 @@ class AuthenticationController extends Controller
         $create["phoneno"] = $input["phoneno"];
         $create["password"] = Hash::make($input['password']);
         $user=User::create($create);
+
+        $userz['user_id'] = $user->id;
+        $userz['name'] = "buyer";
+        $thePerson = Persin::create($userz);
 
         if ($user) {
             // successfully inserted into database
