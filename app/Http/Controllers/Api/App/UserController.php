@@ -14,8 +14,16 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
+use App\Http\Requests\User\AddUserRequest;
+use App\Http\Requests\User\EditUserRequest;
+use App\Http\Requests\User\DeleteUserRequest;
+
+use App\Traits\ResponseTrait;
+
 class UserController extends Controller
 {
+    use ResponseTrait;
+    
     function profile()
     {   
         $followers = Follower::where('vendor', Auth::id())->count();
@@ -121,7 +129,7 @@ class UserController extends Controller
         $path='/avatar/' . $photo;
         file_put_contents(public_path().'/avatar/'.$photo, $decodedImage);
 
-        User::where('id', $request->id)->update(['avatar' => url($path)]);
+        User::where('id', $request->id)->update(['avatar' => $photo]);
 
 
         // $user->avatar="https://".env('FTP_HOST')."/".$path;
@@ -129,6 +137,32 @@ class UserController extends Controller
 
 
         return response()->json(['success' => 1, 'message' => 'Image updated successfully', 'data'=>$user]);
+    }
+
+    public function AddUser(AddUserRequest $request)
+    {
+        // $validated = $request->validated();
+        
+    }
+
+    public function UpdateUser(EditUserRequest $request)
+    {
+        // $validated = $request->validated();
+    }
+
+    public function DeleteUser(DeleteUserRequest $request)
+    {
+        // $validated = $request->validated();   
+    }
+
+    public function UserById(Request $request)
+    {
+        
+    }
+
+    public function UserByType(Request $request)
+    {
+        
     }
 
 }

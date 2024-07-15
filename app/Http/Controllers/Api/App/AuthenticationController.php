@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Qualification;
 use App\Models\Service;
 use App\Models\User;
+use App\Models\Persin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -56,9 +57,30 @@ class AuthenticationController extends Controller
         $token = $user->createToken("app")->plainTextToken;
         User::where('id', $user->id)->update(['online' => 1 ]);
 
-        $x = User::where('id', $user->id)->first();
-
-        return response()->json(['success' => 1, 'message' => 'Login successfully', 'token' => $token, 'data' => $x]);
+        $x = User::where('id', $user->id)->with('persin')->first();
+        $psn = [];
+        foreach ($x->persin as $value) 
+        {
+            array_push($psn, $value->name);
+        }
+        $resource = 0;
+        if($x->type === 'admin')
+        {
+            $resource = 3;
+        } else {            
+            if(in_array("buyer", $people)){ $resource = $resource + 1;  }
+            if(in_array("affiliate", $people)){ $resource = $resource + 1; }
+            if(in_array("student", $people))
+            {  
+                if($resource === 0)
+                {
+                    $resource = 2;
+                } else {
+                    $resource = $resource + 1;
+                }
+            }
+        }
+        return response()->json(['success' => 1, 'message' => 'Login successfully', 'token' => $token, 'data' => $x, 'persin' => $resource, 'resource' => $psn]);
     }
 
     public function vendorRegister(RegisterRequest $request)
@@ -247,27 +269,50 @@ class AuthenticationController extends Controller
         if (!$validator->passes()) {
             return response()->json(['success' => 0, 'message' => implode(",", $validator->errors()->all())]);
         }
+        
+        $fullname = explode(" ", $input['name']);
+
+        if(count($fullname) === 1)
+        { return response()->json(['success' => 0, 'message' => "Provide your surname"]);  }
+
+        $firstname = $fullname[0];
+        $surname = $fullname[1];
+
+        if(count($fullname) > 2)
+        {
+          for($i=2; $i < count($fullname); $i++)
+          {
+               $surname .= ' - '.$fullname[$i];
+          }
+        }
 
         //values gotten
 
         $create["type"] = "affiliate";
         $create["email"] = $input["email"];
-        $create["name"] = $input["name"];
+        $create["name"] = $firstname;
+        $create["lastname"] = $surname;
         $create["phoneno"] = $input["phoneno"];
         $create["password"] = Hash::make($input['password']);
-//        $create['year_of_experience']=$input["year_of_experience"];
-//        $create['specialization']=$input["specialization"];
-//        $create['id_card_front']=$input["id_card_front"];
-        $user=User::create($create);
+        //  $create['year_of_experience']=$input["year_of_experience"];
+        //  $create['specialization']=$input["specialization"];
+        //  $create['id_card_front']=$input["id_card_front"];
+            $user=User::create($create);
 
-        $biz['user_id']=$user->id;
-        $biz['name']=$input["company_name"];
-        $biz['address']=$input["company_address"];
-        $biz['cac_number']=$input["company_cac"];
-//        $biz['nata']=$input["company_nata"];
+            $biz['user_id']=$user->id;
+            $biz['name']=$input["company_name"];
+            $biz['address']=$input["company_address"];
+            $biz['cac_number']=$input["company_cac"];
+        //  $biz['nata']=$input["company_nata"];
 
-        if (Company::create($biz)) {
-            // successfully inserted into database
+        if (Company::create($biz)) 
+        {
+            // successfully inserted into database           
+
+            $userz['user_id'] = $user->id;
+            $userz['name'] = $create["type"];
+            Persin::create($userz);
+
             $token = $user->createToken("app")->plainTextToken;
 
             return response()->json(['success' => 1, 'message' => 'Account created successfully', 'token'=>$token, 'id' => $user->id]);
@@ -301,13 +346,33 @@ class AuthenticationController extends Controller
             return response()->json(['success' => 0, 'message' => implode(",", $validator->errors()->all())]);
         }
 
-        //values gotten
+        $fullname = explode(" ", $input['name']);
 
+        if(count($fullname) === 1)
+        { return response()->json(['success' => 0, 'message' => "Provide your surname"]);  }
+
+        $firstname = $fullname[0];
+        $surname = $fullname[1];
+
+        if(count($fullname) > 2)
+        {
+          for($i=2; $i < count($fullname); $i++)
+          {
+               $surname .= ' - '.$fullname[$i];
+          }
+        }
+
+        //values gotten
         $create["email"] = $input["email"];
-        $create["name"] = $input["name"];
+        $create["name"] = $firstname;
+        $create["lastname"] = $surname;
         $create["phoneno"] = $input["phoneno"];
         $create["password"] = Hash::make($input['password']);
         $user=User::create($create);
+
+        $userz['user_id'] = $user->id;
+        $userz['name'] = "buyer";
+        $thePerson = Persin::create($userz);
 
         if ($user) {
             // successfully inserted into database

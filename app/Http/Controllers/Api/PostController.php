@@ -131,7 +131,7 @@ class PostController extends Controller
     public function blogDetail($post_id)
     {
         $data['post'] = Post::withCount(['comments'])->where('id', $post_id)->with('comments', 'user')->first();
-        $data['product'] = Product::where(["status" => 'active', "featured" => 1])->inRandomOrder()->limit(5)->with('lga', 'state', 'category')->get();
+        $data['product'] = Product::where(["status" => 'active', "featured" => 1])->inRandomOrder()->limit(5)->with('lga', 'state', 'category', 'image')->get();
         $data['faq'] = Faq::inRandomOrder()->limit(5)->get();
         $data['comments'] = Message::with('product')->inRandomOrder()->limit(10)->get();
         return response()->json(['success' => 1, 'message' => 'blog page', 'response'=> $data]);

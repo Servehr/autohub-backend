@@ -79,6 +79,8 @@ class WatchListController extends Controller
     public function userWatchList($currentPage, $perPage)
     {
          $allUserProductWatchList = WatchList::where('user_id', Auth::id())->pluck('product_id');
+        //  return response()->json(['success' => 1, 'message' => 'All Wish List', 'data'=> $allUserProductWatchList]);
+
         //  $products = Product::with('images')->whereIn('id', $allUserProductWatchList)->get();
         //  return response()->json(['success' => 1, 'message' => 'Fetched successfully', 'data' =>$products]);
         

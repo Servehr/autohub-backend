@@ -60,4 +60,8 @@ class Product extends Model
     public function condition(){
         return $this->hasOne(Condition::class,'id','condition_id');
     }
+
+    public function image(){
+        return $this->hasMany(Images::class,'product_id','id');
+    }
 }
