@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\Maceos\MACEOSController;
+use App\Http\Controllers\Api\Maceos\Course\CourseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Imagick as Imagick;
@@ -73,6 +75,11 @@ Route::prefix("app")->group(function () {
         Route::post('change-email', [AuthenticationController::class, 'changeEmail']);
         Route::post('change-phone-number', [AuthenticationController::class, 'changePhoneNumber']);
     });
+
+    // MACEOS
+    Route::post('maceos-registration', [MACEOSController::class, 'ExistingUserRegistration']);
+    Route::post('maceos-new-registration', [MACEOSController::class, 'NewRegistration']);
+    Route::get('maceos-registration/{id}', [MACEOSController::class, 'UserInfo']);
 
     Route::get('sliders', [SliderController::class, 'index']);
     Route::get('qualifications', [AuthenticationController::class, 'qualifications']);

@@ -300,7 +300,7 @@ class AdController extends Controller
         } else {
           return response()->json(['success' => 1, 'message' => 'No Image Found', 'data'=>'']);
         }
-    }
+    }  
 
     function ChangeProfilePicture(Request $request)
     {
