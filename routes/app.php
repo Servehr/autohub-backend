@@ -185,9 +185,9 @@ Route::prefix("app")->group(function () {
         });
 
         Route::prefix('chat')->group(function () {
-            Route::get('list', [FaqController::class, 'chatlist']);
-            Route::post('conversation', [FaqController::class, 'conversation']);
-            Route::get('conversations/{receiver}', [FaqController::class, 'conversations']);
+            Route::get('list', [ChatController::class, 'chatlist']);
+            Route::post('conversation', [ChatController::class, 'conversation']);
+            Route::get('conversations/{receiver}/{product_id}', [ChatController::class, 'conversations']);
         });
 
 

@@ -51,43 +51,59 @@ class ChatController extends Controller
         return response()->json(['success' => 1, 'message' => 'operation is ok', 'data'=> $user]);
     }
 
-    public function conversations($id)
+    public function conversations($receiver, $product_id)
     {
-        $contacted = Conversation_user::where('sender', $id)->orWhere('receiver', $id)->first();
-        if($contacted)
-        {
-            $conversationId = $contacted->id;
-            $conversations = Conversation::where('conversation_id', $conversationId)->get();
-            return response()->json(['success' => 1, 'message' => 'converstaion between users', 'data'=> $conversations]);
-        }
+        // $contacted = Conversation_user::where('sender', $receiver)->orWhere('receiver', $receiver)->first();
+        // if($contacted)
+        // {
+        //     $conversationId = $contacted->id;
+        //     $conversations = Conversation::where('conversation_id', $conversationId)->get();
+        //     return response()->json(['success' => 1, 'message' => 'converstaion between users', 'data'=> $conversations]);
+        // }
+        $conversation = DB::table('conversations')
+                                ->join('users', 'conversations.sent_by', '=', 'users.id')
+                                ->join('conversations_users', 'conversations.conversation_id', '=', 'conversations_users.conversation_id')
+                                 ->select('users.id', 'users.avatar', 'conversations.product_id', 'conversations.message', 'conversations.sent_by', 'received_by', 'conversations_users.conversation_id')
+                                 ->where('conversations.product_id', $product_id)
+                                 ->get();
+        return response()->json(['success' => 1, 'message' => 'message successfully sent', 'data'=> $conversation]);
     }
 
     public function sendMessage(Request $request)
     {
-        $chatMate = DB::table('conversations_users')->where('sender', '=', Auth::user()->id)->Where('receiver', '=', $request->reciever)->first();
-        if($chatMate)
-        {
-            if($chatMate->sender === Auth::user()->id)
-            {
-               $toUser = $chatMate->receiver;
-            } else {
-               $toUser = $chatMate->sender;
-            }
-        } else {
-            $chatMate = DB::table('conversations_users')->where('sender', '=', $request->reciever)->Where('receiver', '=', Auth::user()->id)->first();
-            if($chatMate->sender === Auth::user()->id)
-            {
-               $toUser = $chatMate->receiver;
-            } else {
-               $toUser = $chatMate->sender;
-            }
-        }
         $input = $request->all();
-        $input['conversation_id'] = $chatMate->id;
-        $input['sent_by'] = Auth::user()->id;
-        $message = Conversation::create($input);
+        $userId = (int)$input['receiver'];
+        $contacted = Conversation_user::where('sender_id', $userId)->orWhere('receiver_id', $userId)->first();
+        // return response()->json(['success' => 1, 'message' => 'converstaion between users', 'data'=> $contacted]);
+        $theId = '';
+        if(!$contacted)
+        {
+            $conversation['conversation_id'] = "kroijkfgffgfgfg";
+            $conversation['sender_id'] = Auth::user()->id;
+            $conversation['receiver_id'] = (int)$input['receiver'];
+            $converse = Conversation_user::create($conversation);
+            $theId = $converse->conversation_id;
+        }
+
+        $convo['product_id'] = (int)$input['productId'];
+        $convo['message'] = $input['message'];
+        $convo['sent_by'] = Auth::user()->id;
+        $convo['received_by'] = (int)$input['receiver'];
+        $convo['conversation_id'] = ($contacted->conversation_id === null) ?  '' : $contacted->conversation_id;
+        $message = Conversation::create($convo);
         return response()->json(['success' => 1, 'message' => 'message successfully sent', 'data'=> $message]);
     }
+
+    // public function conversations($id)
+    // {
+    //     $contacted = Conversation_user::where('sender', $id)->orWhere('receiver', $id)->first();
+    //     if($contacted)
+    //     {
+    //         $conversationId = $contacted->id;
+    //         $conversations = Conversation::where('conversation_id', $conversationId)->get();
+    //         return response()->json(['success' => 1, 'message' => 'converstaion between users', 'data'=> $conversations]);
+    //     }
+    // }
 
     public function initiateConversation(Request $request)
     {

@@ -31,7 +31,7 @@ class MaceosRegistrationRequest extends FormRequest
             //
           'firstname' => 'required|string|max:20',
           'lastname' => 'required|string|max:20',
-          'middlename' => 'required|string|max:20',
+          'surname' => 'required|string|max:20',
           'phoneno' => 'required|string|max:20',
           'email' => 'required|string|max:35|unique:users',
           'companyName' => 'required',

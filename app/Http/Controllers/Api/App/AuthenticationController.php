@@ -68,13 +68,13 @@ class AuthenticationController extends Controller
         {
             $resource = 3;
         } else {            
-            if(in_array("buyer", $people)){ $resource = $resource + 1;  }
-            if(in_array("affiliate", $people)){ $resource = $resource + 1; }
-            if(in_array("student", $people))
+            if(in_array("buyer", $psn)){ $resource = $resource + 1;  }
+            if(in_array("affiliate", $psn)){ $resource = $resource + 1; }
+            if(in_array("student", $psn))
             {  
                 if($resource === 0)
                 {
-                    $resource = 2;
+                    $resource = 4;
                 } else {
                     $resource = $resource + 1;
                 }

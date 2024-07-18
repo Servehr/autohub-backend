@@ -10,6 +10,7 @@ use App\Http\Requests\MaceosRegistrationRequestt;
 
 use App\Traits\ResponseTrait;
 use App\Models\User;
+use App\Models\Persin;
 use App\Models\Student;
 
 
@@ -47,38 +48,43 @@ class MACEOSController extends Controller
 
     public function NewRegistration(Request $request)
     {
-        try 
-        {   
-            $validated = $request->validated();
+        // try 
+        // {   
+            // $validated = $request->validated();
             $input = $request->all();
             $user['name'] = $input['firstname'];
             $user['middlename'] = $input['middlename'];
-            $user['lastname'] = $input['lastname'];
+            $user['lastname'] = $input['surname'];
             $user['email'] = $input['email'];
             $user['phoneno'] = $input['phoneno'];
             $user["password"] = Hash::make($input['password']);
             $user['type'] = 'student';
             $user = User::create($user);
+            // return $this->sendSuccess(false, "Registration Successful", $user, "");
             if($user)
             {
                 $student['user_id'] = $user->id;
-                $student['company_name'] = $input['company_name'];
-                $student['company_address'] = $input['company_address'];
+                $student['company_name'] = $input['companyName'];
+                $student['company_address'] = $input['companyAddress'];
                 $student['specialization'] = $input['specialization'];
-                $student['years_in'] = $input['years_in'];
+                $student['years_in'] = $input['yearsIn'];
                 $student['region'] = $input['region'];
                 $student['city'] = $input['city'];
                 $student['birth'] = $input['birth'];
                 $student['gender'] = $input['gender'];
                 $student['academic'] = $input['academic'];
                 Student::create($student);        
-                return $this->sendSuccess(false, "Registration Successful", "", "");
+
+                $person['user_id'] = $user->id;
+                $person['name'] = 'student';
+                $userPerson = Persin::create($person);
+                return $this->sendSuccess(false, "Registration Successful",  $userPerson, "");
             } else {
                 return $this->sendSuccess(false, "Processing User Information Failed", "", "");
             }
-        } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
-        }
+        // } catch (\Throwable $th) {
+        //     return $this->sendError('', "Failed", 500);
+        // }
     }
 
     public function UserInfo($id)

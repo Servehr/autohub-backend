@@ -31,6 +31,7 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class AdController extends Controller
 {
+    public $colourName = "";
 
     function sendImageToServer(Request $request)
     {
@@ -94,9 +95,15 @@ class AdController extends Controller
         }
 
         $plan=Plan::find($input['plan_id']);
-
         if(!$plan){
             return response()->json(['success' => 0, 'message' => 'Invalid plan ID']);
+        }
+
+        $colour=Colour::where('id', $input['colour'])->first();
+        if(!$colour){
+            return response()->json(['success' => 0, 'message' => 'Invalid Colour ID']);
+        } else {
+            $this->colourName = $colour->name;
         }
 
         if($plan->amount > 0){
@@ -157,13 +164,13 @@ class AdController extends Controller
 
         if($request->others != "")
         {
-            $title= $p->year_of_production ." " . $p->colour ." ".$newManufacturer->title." ". $newModel->title;
+            $title= $p->year_of_production ." " . $this->colourName ." ".$newManufacturer->title." ". $newModel->title;
             Product::where('id', $p->id)->update(["make_id" => $newManufacturer->id, "model_id" => $newModel->id]);
             Product::where('id', $p->id)->update(["title" => $title]);
         } else {
             $make=CarMake::find($input['maker']);
             $model=CarModel::find($input['model']);
-            $title= $input['year_of_production'] ." " . $input['colour'] ." ".$make->title." ". $model->title;
+            $title= $input['year_of_production'] ." " . $this->colourName ." ".$make->title." ". $model->title;
             Product::where('id', $p->id)->update(["make_id" => $input['maker'], "model_id" => $input['model']]);
             Product::where('id', $p->id)->update(["title" => $title]);
         }
@@ -465,9 +472,9 @@ class AdController extends Controller
         $currentPagee = intval($currentPage);
         $products = Product::where('user_id', Auth::id())->where('status', 'active')->where('draft', 'no')->get();
         $totalPages = $products->count();
-        $noOfPages = (($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
+        $noOfPages = round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPagee * $perPagee)/$perPagee) - 1) > 0);
-        $hasNextPage = (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
+        $hasNextPage =  (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
 
         // if(((($currentPagee * $perPagee)/$perPagee) < 1) || ($currentPagee > 0))
         // {
