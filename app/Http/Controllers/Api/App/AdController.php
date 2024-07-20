@@ -145,7 +145,7 @@ class AdController extends Controller
         // }
 
         $pid['slug']=uniqid();
-        $pid['avatar']=json_encode($all_images);
+        $pid['avatar']="";
         $pid['description']=$input['description'];
         $pid['category_id']=$input['category'];
         $pid['state_id']=$input['state'];
@@ -544,6 +544,8 @@ class AdController extends Controller
     function removeUserProductImage($image_id, $product_id)
     {
         Images::where('id', $image_id)->where('product_id', $product_id)->delete();
+        // remove image from folder
+        
         $userProductImages = Images::where('product_id', $product_id)->get();
         return response()->json(['success' => 1, 'message' => 'operation is ok', 'data'=>$userProductImages]);
     }
@@ -619,7 +621,7 @@ class AdController extends Controller
 
     function deleteAdvert($id)
     {
-       Product::where('id', $id)->delete();
+       Product::where('id', $id)->delete(); // set deleted at
        Images::where('product_id', $id)->delete();
        return response()->json(['success' => 1, 'message' => 'Product successfully deleted']);
     }

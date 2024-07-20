@@ -30,10 +30,10 @@ class MACEOSController extends Controller
             User::where('id', $id)->update(['middlename' => $middlename]);
 
             $student['user_id'] = $id;
-            $student['company_name'] = $input['company_name'];
-            $student['company_address'] = $input['company_address'];
+            $student['company_name'] = $input['companyName'];
+            $student['company_address'] = $input['companyAddress'];
             $student['specialization'] = $input['specialization'];
-            $student['years_in'] = $input['years_in'];
+            $student['years_in'] = $input['yearsIn'];
             $student['region'] = $input['region'];
             $student['city'] = $input['city'];
             $student['birth'] = $input['birth'];

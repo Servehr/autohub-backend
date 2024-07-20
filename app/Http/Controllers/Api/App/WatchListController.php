@@ -88,9 +88,10 @@ class WatchListController extends Controller
         $currentPagee = intval($currentPage);
         $wishLists = WatchList::where('user_id', Auth::id())->get();
         $totalPages = $wishLists->count();
-        $noOfPages = (($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
+        // $noOfPages = (($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
+        $noOfPages = round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPagee * $perPagee)/$perPagee) - 1) > 0);
-        $hasNextPage = (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
+        $hasNextPage = (($totalPages/$perPage) > (($currentPagee * $perPagee)/$perPagee));
 
         // if(((($currentPagee * $perPagee)/$perPagee) < 1) || ($currentPagee > 0))
         // {

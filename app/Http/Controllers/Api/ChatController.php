@@ -72,6 +72,7 @@ class ChatController extends Controller
     public function sendMessage(Request $request)
     {
         $input = $request->all();
+        // return response()->json(['success' => 1, 'message' => 'message successfully sent', 'data'=> $input]);
         $userId = (int)$input['receiver'];
         $contacted = Conversation_user::where('sender_id', $userId)->orWhere('receiver_id', $userId)->first();
         // return response()->json(['success' => 1, 'message' => 'converstaion between users', 'data'=> $contacted]);
