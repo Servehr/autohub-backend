@@ -18,6 +18,8 @@ use App\Models\Images;
 use App\Models\Transmission;
 use App\Models\Trim;
 use App\Models\User;
+use App\Models\Fuel;
+use App\Models\Country;
 use App\Models\Follower;
 use App\Notifications\notifyUser;
 use Illuminate\Http\Request;
@@ -56,16 +58,6 @@ class AdController extends Controller
     function createAd(Request $request)
     {
         // return response()->json(['success' => 0, 'message' => $request->all()]);
-        // $hey = $this->checkIfItIsMainImage(1, $request->mainImage);
-        // $clip = '';
-        // $numbers =
-        // if($hey === 1)
-        // {
-        //     $clip = "Yes";
-        // } else {
-        //     $clip = "Na wetin dey happen";
-        // }
-        // return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' => $clip]);
         $input = $request->all();
         $rules = array(
             'state' => 'required',
@@ -78,7 +70,7 @@ class AdController extends Controller
             'trim' => 'required',
             'description' => 'required',
             'price' => 'required',
-            'avatar' => 'required',
+            'images' => 'required',
             'plan_id' => 'required',
         );
         $messages = [
@@ -105,17 +97,29 @@ class AdController extends Controller
         } else {
             $this->colourName = $colour->name;
         }
+        // return response()->json(['success' => 0, 'message' => $this->colourName]);
 
         if($plan->amount > 0){
             $pid['status'] = "awaiting_payment";
         }
 
+        $allAdvert = [];
+        $imagePosition = "";
+        $imageIndex = [];
+        $imageLength = count($request->images);
+        for ($i=0; $i < $imageLength; $i++) 
+        { 
+            array_push($allAdvert, $request->images[$i]['image']);
+            array_push($imageIndex, $i);
+            $imagePosition = (int)$request->images[$i]['faceImage'];
+        }
+        // return response()->json(['success' => 0, 'message' => $allAdvert, 'index' => $imageIndex, 'position' => $imagePosition]);
         $all_images = [];
-        $imgSplits= $input['avatar'];
+        $imgSplits= $allAdvert;
         $startName=Auth::id().rand();
         foreach ($imgSplits as $imgSplit)
         {
-            $photo = $startName.uniqid() . ".jpg";
+            $photo = $startName.uniqid(). ".jpg";
             $decodedImage = base64_decode($imgSplit);
             $path='/product/' . $photo;
             file_put_contents(public_path().'/product/'.$photo, $decodedImage);
@@ -160,6 +164,10 @@ class AdController extends Controller
         $pid['user_id']=Auth::id();
         $pid['plan_id']=$input['plan_id'];
         $pid['draft']=$input['draft'];
+        $pid['fuel_type']=$input['fuel'];
+        $pid['mileage']=$input['mileage'];
+        $pid['country_id']=$input['country'];
+        $pid['trim']=$input['trim'];
         $p=Product::create($pid);
 
         if($request->others != "")
@@ -185,26 +193,153 @@ class AdController extends Controller
                 'product_id' => $p->id,
                 'image_url' => $image
             ]);
+            if((int)$imageIndex[$index] === $imagePosition)
+            {
+                Product::where('id', $p->id)->update(['avatar' => $image]);
+            }
             array_push($inserted_image_id, $img->id);
         }
-
-        // $is_cover_page_set = Images::where('user_id', Auth::id())->where('product_id', $p->id)->where('cover_page', 1)->exists();
-        // if(!$is_cover_page_set)
-        // {
-        //     $set_cover_page = Images::where('user_id', Auth::id())->where('product_id', $p->id)->first();
-        //     Images::where("id", $set_cover_page->id)->update(["cover_page" => 1]);
-        // }
         $getFaceAdvert = Images::where('user_id', Auth::id())->where('product_id', $p->id)->pluck('image_url');
-        $imageToUseAsCover = $getFaceAdvert[$request->mainImage];
-        Images::where('image_url', $imageToUseAsCover)->where('product_id', $p->id)->update(['cover_page' => 1]);
-        $new_cover_page = Images::where('image_url', $imageToUseAsCover)->where('product_id', $p->id)->where(['cover_page' => 1])->first();
-        Product::where('id', $p->id)->update(['avatar' => $new_cover_page->image_url]);
+        $uploadedImages = $getFaceAdvert->toArray();
+        $product_avatar = Product::where('id', $p->id)->first();
+        if($product_avatar->avatar)
+        {
+            if(in_array($product_avatar->avatar, $uploadedImages))
+            {
+                $imageToUseAsCover = $getFaceAdvert[$imagePosition];
+                Images::where('image_url', $imageToUseAsCover)->where('product_id', $p->id)->update(['cover_page' => 1]);
+            }
+        }
 
         $notifyData['sender']="Autohub";
         $notifyData['message']="Your post has been submitted successfully and you will be notified when approved";
 
         $user->notify(new notifyUser($notifyData));
-        return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' =>$p->id, 'draft' => $p->draft]);
+        return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' =>(int)$p->id, 'draft' => $p->draft, 'status' => 'successful']);
+    }
+
+    function ProcessingCreateAd(Request $request)
+    {
+        $product_id = (int)$request->product_id;
+        $allAdvert = [];
+        $imagePosition = "";
+        $imageIndex = [];
+        $imageLength = count($request->images);
+        for ($i=0; $i < $imageLength; $i++) 
+        { 
+            array_push($allAdvert, $request->images[$i]['image']);
+            array_push($imageIndex, $i);
+            $imagePosition = (int)$request->images[$i]['faceImage'];
+        }
+        
+        $all_images = [];
+        $imgSplits= $allAdvert;
+        $startName=Auth::id().rand();
+        foreach ($imgSplits as $imgSplit)
+        {
+            $photo = $startName.uniqid(). ".jpg";
+            $decodedImage = base64_decode($imgSplit);
+            $path='/product/' . $photo;
+            file_put_contents(public_path().'/product/'.$photo, $decodedImage);
+            array_push($all_images, $photo);
+        }
+
+        $inserted_image_id = [];
+        foreach($all_images as $index => $image)
+        {
+            $img = Images::create([
+                'user_id' => Auth::id(),
+                'product_id' => $product_id,
+                'image_url' => $image
+            ]);
+            array_push($inserted_image_id, $img->id);
+        }
+
+        $uploads = Images::where('user_id', Auth::id())->where('product_id', $product_id)->pluck('image_url');
+        $uploadConvert = $uploads->toArray();
+        foreach ($uploadConvert as $key => $image_upload) 
+        {
+            if($key === $imagePosition)
+            {
+                Product::where('id', $product_id)->update(['avatar' => $image_upload]);
+            }
+        }
+
+        $getFaceAdvert = Images::where('user_id', Auth::id())->where('product_id', $product_id)->pluck('image_url');
+        $uploadedImages = $getFaceAdvert->toArray();
+        $product_avatar = Product::where('id', $product_id)->first();
+        if($product_avatar->avatar)
+        {
+            if(in_array($product_avatar->avatar, $uploadedImages))
+            {
+                $imageToUseAsCover = $getFaceAdvert[$imagePosition];
+                Images::where('image_url', $imageToUseAsCover)->where('product_id', $product_id)->update(['cover_page' => 1]);
+            }
+        }
+        return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' =>$product_id, 'status' => "successful" ]);
+
+    }
+
+    function CompleteCreateAd(Request $request)
+    {
+        $product_id = (int)$request->product_id;
+        $allAdvert = [];
+        $imagePosition = "";
+        $imageIndex = [];
+        $imageLength = count($request->images);
+        for ($i=0; $i < $imageLength; $i++) 
+        { 
+            array_push($allAdvert, $request->images[$i]['image']);
+            array_push($imageIndex, $i);
+            $imagePosition = (int)$request->images[$i]['faceImage'];
+        }
+
+        $all_images = [];
+        $imgSplits= $allAdvert;
+        $startName=Auth::id().rand();
+        foreach ($imgSplits as $imgSplit)
+        {
+            $photo = $startName.uniqid() . ".jpg";
+            $decodedImage = base64_decode($imgSplit);
+            $path='/product/' . $photo;
+            file_put_contents(public_path().'/product/'.$photo, $decodedImage);
+            array_push($all_images, $photo);
+        }
+
+        $inserted_image_id = [];
+        foreach($all_images as $index => $image)
+        {
+            $img = Images::create([
+                'user_id' => Auth::id(),
+                'product_id' => $product_id,
+                'image_url' => $image
+            ]);
+            array_push($inserted_image_id, $img->id);
+        }
+
+        $uploads = Images::where('user_id', Auth::id())->where('product_id', $product_id)->pluck('image_url');
+        $uploadConvert = $uploads->toArray();
+        foreach ($uploadConvert as $key => $image_upload) 
+        {
+            if($key === $imagePosition)
+            {
+                Product::where('id', $product_id)->update(['avatar' => $image_upload]);
+            }
+        }
+        
+        $getFaceAdvert = Images::where('user_id', Auth::id())->where('product_id', $product_id)->pluck('image_url');
+        $uploadedImages = $getFaceAdvert->toArray();
+        $product_avatar = Product::where('id', $product_id)->first();
+        if($product_avatar->avatar)
+        {
+            if(in_array($product_avatar->avatar, $uploadedImages))
+            {
+                $imageToUseAsCover = $getFaceAdvert[$imagePosition];
+                Images::where('image_url', $imageToUseAsCover)->where('product_id', $product_id)->update(['cover_page' => 1]);
+            }
+        }
+        return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' =>$product_id, 'status' => "successful" ]);
+
     }
 
     function checkIfItIsMainImage($position, $image)
@@ -259,21 +394,26 @@ class AdController extends Controller
         $carModel = CarModel::find($request->model);
         $title= $request->year_of_production ." " . $color->name ." ".$carMake->title." ". $carModel->title;
         // return response()->json(['success' => 1, 'message' => 'Product successfully updated', 'data'=>$title]);
-        Product::where('id', $request->productId)->update([
-            'state_id' => $request->state,
-            'category_id' => $request->category,
-            'make_id' => $request->maker,
-            'model_id' => $request->model,
-            'year_of_production' => $request->year_of_production,
-            'colour' => $request->colour,
-            'transmission_id' => $request->transmission,
-            'condition_id' => $request->condition,
-            'trim' => $request->trim,
-            'description' => $request->description,
-            'chasis_no' => $request->chasis_number,
-            'price' => $request->price,
-            'title' => $title
-        ]);
+        Product::where('id', $request->productId)->update(
+            [
+                'country_id' => $request->country,
+                'state_id' => $request->state,
+                'category_id' => $request->category,
+                'make_id' => $request->maker,
+                'model_id' => $request->model,
+                'trim' => $request->trim,
+                'fuel_type' => $request->fuelType,
+                'year_of_production' => $request->productionYear,
+                'colour' => $request->colour,
+                'transmission_id' => $request->transmission,
+                'condition_id' => $request->condition,
+                'description' => $request->description,
+                'chasis_no' => $request->chasisNo,
+                'price' => $request->price,
+                'mileage' => $request->mileage,
+                'title' => $title,
+            ]
+        );
         $data = Product::find($request->productId);
         return response()->json(['success' => 1, 'message' => 'Product successfully updated', 'data'=>$data]);
     }
@@ -830,7 +970,7 @@ class AdController extends Controller
 
     function allEnpointForAdvert($product_id)
     {
-        $data['maker'] = CarMake::get();
+        $data['maker'] = CarMake::orderBy('rate', 'ASC')->get();
         $data['model'] = CarModel::get();
         $data['userProductDetail'] = Product::where("id", $product_id)->with('images')->first();
         $data['state'] = State::where("status", 1)->get();
@@ -839,6 +979,27 @@ class AdController extends Controller
         $data['transmission'] = Transmission::where("status", 1)->get();
         $data['condition'] = Condition::where("status", 1)->get();
         $data['trim'] = Trim::where("status", 1)->get();
+        $data['fuel'] = Fuel::where("status", 1)->get();
+        $data['countries'] = Country::where("status", 1)->get();
+        return response()->json(['success' => 1, 'message' => 'data successfully fetched', 'data'=>$data]);
+    }
+
+    function allEnpointForAdvertEdit($product_id, $state_id, $model_id, $trim_id)
+    {
+        $data['maker'] = CarMake::orderBy('rate', 'ASC')->get();
+        $data['model'] = CarModel::get();
+        $data['userProductDetail'] = Product::where("id", $product_id)->with('images')->first();
+        $data['state'] = State::where("status", 1)->get();
+        $data['category'] = Category::where("status", 1)->get();
+        $data['colour'] = Colour::where("status", 1)->orderBy('name')->get();
+        $data['transmission'] = Transmission::where("status", 1)->get();
+        $data['condition'] = Condition::where("status", 1)->get();
+        $data['trim'] = Trim::where("status", 1)->get();
+        $data['user_state'] = State::where("status", 1)->where("country_id", $state_id)->get();
+        $data['user_model'] = CarModel::where("make_id", $model_id)->get();
+        $data['user_trim'] = Trim::where("model_id", $trim_id)->get();
+        $data['fuel'] = Fuel::where("status", 1)->get();
+        $data['countries'] = Country::where("status", 1)->get();
         return response()->json(['success' => 1, 'message' => 'data successfully fetched', 'data'=>$data]);
     }
 

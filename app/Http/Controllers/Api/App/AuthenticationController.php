@@ -408,7 +408,7 @@ class AuthenticationController extends Controller
                     'created_at' => now(),
                 ]
             );
-            // Mail::to($request['email'])->send(new EmailReset($code));
+            Mail::to($request['email'])->send(new EmailReset($code));
             $encrypted = Hash::make($user->id);
             $userData['id'] = $user->id;
             $userData['email'] = $user->email;

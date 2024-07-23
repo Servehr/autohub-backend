@@ -103,6 +103,8 @@ Route::prefix("app")->group(function () {
                 Route::get('products/{current_page}/{per_page}', [AdController::class, 'products']);
                 Route::get('product-search/{current_page}/{per_page}/{keyword}', [AdController::class, 'searchProduct']);
                 Route::post('create-ad', [AdController::class, 'createAd']);
+                Route::post('processing-create-ad', [AdController::class, 'ProcessingCreateAd']);
+                Route::post('complete-create-ad', [AdController::class, 'CompleteCreateAd']);
                 Route::put('update', [AdController::class, 'updateAds']);
                 Route::post('add-product-ads', [AdController::class, 'addAnotherProduct']);
                 Route::delete('remove-wish-list/{id}', [WatchListController::class, 'removeWishList']);
@@ -117,6 +119,7 @@ Route::prefix("app")->group(function () {
                 Route::get('draft-post/{currentPage}/{perPage}', [AdController::class, 'draftPost']);
             });
             Route::get('advert-api/{product_id}', [AdController::class, 'allEnpointForAdvert']);
+            Route::get('advert-api/{product_id}/{state_id}/{model_id}/{trim_id}', [AdController::class, 'allEnpointForAdvertEdit']);
             Route::get('single-product/{product_id}', [AdController::class, 'singleProduct']);
             Route::post('activate-product/{product_id}', [AdController::class, 'activateProduct']);
             Route::post('de-activate-product/{product_id}', [AdController::class, 'DeActivateProduct']);
