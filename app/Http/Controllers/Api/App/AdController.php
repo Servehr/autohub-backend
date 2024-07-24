@@ -402,7 +402,7 @@ class AdController extends Controller
                 'make_id' => $request->maker,
                 'model_id' => $request->model,
                 'trim' => $request->trim,
-                'fuel_type' => $request->fuelType,
+                'fuel_type' => $request->fuel,
                 'year_of_production' => $request->productionYear,
                 'colour' => $request->colour,
                 'transmission_id' => $request->transmission,
@@ -725,7 +725,7 @@ class AdController extends Controller
 
     function allProductsUploaded()
     {
-        $data=Product::with('state', 'lga')->where('status', 'active')->where('draft', 'no')->orderBy('id', 'desc')->paginate(8);
+        $data=Product::with('state', 'lga', 'country')->where('status', 'active')->where('draft', 'no')->orderBy('id', 'desc')->paginate(8);
         return response()->json(['success' => 1, 'message' => 'Fetched successfully', 'data'=>$data]);
     }
 
@@ -995,7 +995,7 @@ class AdController extends Controller
         $data['transmission'] = Transmission::where("status", 1)->get();
         $data['condition'] = Condition::where("status", 1)->get();
         $data['trim'] = Trim::where("status", 1)->get();
-        $data['user_state'] = State::where("status", 1)->where("country_id", $state_id)->get();
+        $data['user_state'] = State::where("status", 1)->where("country_id", $state_id)->orderBy('rate', 'DESC')->get();
         $data['user_model'] = CarModel::where("make_id", $model_id)->get();
         $data['user_trim'] = Trim::where("model_id", $trim_id)->get();
         $data['fuel'] = Fuel::where("status", 1)->get();
