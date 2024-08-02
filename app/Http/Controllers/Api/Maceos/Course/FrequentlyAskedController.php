@@ -18,12 +18,12 @@ class FrequentlyAskedController extends Controller
 {
     use ResponseTrait;
     //
-    public function frequently_asked()
+    public function frequently_asked($id)
     {
         try 
         {
             //code...
-            $all_questions_asked = Asked::get();
+            $all_questions_asked = Asked::where('course_id', $id)->whereNull('deleted_at')->get();
             return $this->sendSuccess(true, "Retrieved all questions", $all_questions_asked, "");
         } catch (\Throwable $th) {
             return $this->sendError('', "Failed", 500);
@@ -33,15 +33,15 @@ class FrequentlyAskedController extends Controller
     //
     public function create_asked_questions(AddFrequentQuestions $request)
     {
-        try 
-        {
+        // try 
+        // {
             //code...
             $input = $request->all();
             $new_question = Asked::create($input);          
             return $this->sendSuccess(true, "Question Successfully Created", $new_question, "");
-        } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
-        }
+        // } catch (\Throwable $th) {
+        //     return $this->sendError('', "Failed", 500);
+        // }
     }
 
     //
@@ -59,30 +59,28 @@ class FrequentlyAskedController extends Controller
     }
 
     //
-    public function edit_asked_questions(UpdateFrequentQuestionRequest $request)
+    public function edit_asked_questions(Request $request)
     {
+        // return $this->sendSuccess(true, "Question Successfully Updated", $request->all(), "");
         try 
         {
             //code...
             $input = $request->all();      
-            $id = $input['id'];
+            $id = (int)($input['id']);
             $question = $input['question'];
-            $description = $input['description'];
-            Asked::where('id', $id)->update(['name', $name, 'question' => $question]);    
-            return $this->sendSuccess(true, "Question Successfully Updated", "", "");
+            Asked::where("id", $id)->update(["question" => $question]); 
+            return $this->sendSuccess(true, "Question Successfully Updated", $request->question, "");
         } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
+            return $this->sendError('', $th, 500);
         }        
     }
 
-    public function delete__asked_questions(DeleteFrequentQuestionRequest $request)
+    public function delete_asked_questions($id)
     {
         try 
         {
-            //code...
-            $input = $request->all();      
-            $id = $input['id'];
-            Course::where('id', $id)->delete();
+            //code...;  
+            Asked::where('id', $id)->update(['deleted_at' => Carbon::now()]);
             return $this->sendSuccess(true, "Question Successfully Deleted", "", "");
         } catch (\Throwable $th) {
             return $this->sendError('', "Failed", 500);

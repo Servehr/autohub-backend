@@ -22,14 +22,14 @@ class CourseController extends Controller
         try 
         {
             //code...
-            $all_courses = Course::get();
+            $all_courses = Course::whereNull('deleted_at')->get();
             return $this->sendSuccess(true, "Student Successfully Registered", $all_courses, "");
         } catch (\Throwable $th) {
             return $this->sendError('', "Failed", 500);
         }
     }
 
-    public function create_course(AddCourseRequest $request)
+    public function create_course(Request $request)
     {
         try 
         {
@@ -38,12 +38,13 @@ class CourseController extends Controller
             $new_course = Course::create($input);          
             return $this->sendSuccess(true, "Course Successfully Registered", $new_course, "");
         } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
+            return $this->sendError('', $th, 500);
         }
     }
 
-    public function edit_course(EditCourseRequest $request)
-    {
+    public function edit_course(Request $request)
+    {  
+        // return $this->sendSuccess(true, "Course Successfully Updated", $request->all(), "");
         try 
         {
             //code...
@@ -51,50 +52,63 @@ class CourseController extends Controller
             $id = $input['id'];
             $name = $input['name'];
             $description = $input['description'];
-            Course::where('id', $id)->update(['name', $name, 'description' => $description]);    
+            Course::where('id', $id)->update(['name' => $name, 'description' => $description]);    
             return $this->sendSuccess(true, "Course Successfully Updated", "", "");
         } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
+            return $this->sendError('', $th, 500);
         }
     }
 
-    public function delete_course(DeleteCourseRequest $request)
+    public function delete_course(Request $request)
     {
+        // return $this->sendSuccess(true, "Course Successfully Deleted", $request->id, "");
         try 
         {
-            //code...
-            $input = $request->all();      
-            $id = $input['id'];
+            //code...     
+            $id = (int)$request->id;
             Course::where('id', $id)->update(['deleted_at' => Carbon::now()]);
             return $this->sendSuccess(true, "Course Successfully Deleted", "", "");
         } catch (\Throwable $th) {
-            return $this->sendError('', "Failed", 500);
+            return $this->sendError('', $th, 500);
         }
     }
 
-    public function upload_course(UploadCourseRequest $request)
+    public function upload_course(Request $request)
     {
         try 
         {
             //code...
-            $input = $request->all();      
-            $id = $input['id'];
+            $input = $request->all();    
+            $id = $request->id;
             if ($request->hasFile('material'))
             {
-                $image_path = url(env('APP_URL'));
-                $picture = time().'-'.rand(1,1000000000000000).'-'.$request->product->getClientOriginalName();
+                // $image_path = url(env('APP_URL'));
+                $courseName = time().'-'.rand(1,1000000000000000).'-'.$request->material->getClientOriginalName();
                 $path = "/course/";
-                $request->product->move(public_path($path), $picture);
+                $request->material->move(public_path($path), $courseName);
                 // $image_url = url($path.$picture);
-                Course::where('id', $id)->update(['file_name', $request->material]);
-                return $this->sendSuccess(true, "Course Material Successfully Uploaded", "", "");
+                Course::where('id', $id)->update(['file_name' => $courseName]);
+                $cxse = Course::find($id);
+                return $this->sendSuccess(true, "Course Material Successfully Uploaded", $cxse, "");
             } else {
                 return $this->sendSuccess(false, "Kindly, select file to upload ", "", "");
             }
-        } catch (\Throwable $th) {
-            //throw $th;            
-            return $this->sendError('', "Failed", 500);
+        } catch (\Throwable $th) {   
+            return $this->sendError('', $th, 500);
         }
+    }
+    
+    public function remove_course(Request $request)
+    {
+        // try 
+        // {
+            //code...
+            Course::where('id', $request->id)->update(['file_name' => NULL]);
+            $cxse = Course::find($request->id);
+            return $this->sendSuccess(true, "Course Material Successfully Uploaded", $cxse, "");
+        // } catch (\Throwable $th) {   
+        //     return $this->sendError('', $th, 500);
+        // }
     }
     
 

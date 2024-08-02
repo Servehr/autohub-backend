@@ -9,6 +9,7 @@ use App\Models\Qualification;
 use App\Models\Service;
 use App\Models\User;
 use App\Models\Persin;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -68,8 +69,8 @@ class AuthenticationController extends Controller
         {
             $resource = 3;
         } else {            
-            if(in_array("buyer", $psn)){ $resource = $resource + 1;  }
-            if(in_array("affiliate", $psn)){ $resource = $resource + 1; }
+            if(in_array("member", $psn)){ $resource = $resource + 1;  }
+            // if(in_array("affiliate", $psn)){ $resource = $resource + 1; }
             if(in_array("student", $psn))
             {  
                 if($resource === 0)
@@ -183,6 +184,10 @@ class AuthenticationController extends Controller
         if (Company::create($biz)) {
             // successfully inserted into database
             $token = $user->createToken("app")->plainTextToken;
+
+            $person['user_id'] = $user->id;
+            $person['name'] = 'member';
+            $userPerson = Persin::create($person);
 
             return response()->json(['success' => 1, 'message' => 'Account created successfully', 'token'=>$token]);
         } else {
@@ -310,7 +315,7 @@ class AuthenticationController extends Controller
             // successfully inserted into database           
 
             $userz['user_id'] = $user->id;
-            $userz['name'] = $create["type"];
+            $userz['name'] = 'member';
             Persin::create($userz);
 
             $token = $user->createToken("app")->plainTextToken;
@@ -363,6 +368,7 @@ class AuthenticationController extends Controller
         }
 
         //values gotten
+        $create["type"] = "buyer";
         $create["email"] = $input["email"];
         $create["name"] = $firstname;
         $create["lastname"] = $surname;
@@ -371,7 +377,7 @@ class AuthenticationController extends Controller
         $user=User::create($create);
 
         $userz['user_id'] = $user->id;
-        $userz['name'] = "buyer";
+        $userz['name'] = "member";
         $thePerson = Persin::create($userz);
 
         if ($user) {
@@ -473,4 +479,41 @@ class AuthenticationController extends Controller
 
         return response()->json(['success' => 1, 'message' => 'Fetched successfully', 'data'=>$data]);
     }
+
+    public function isPaidAndSummary()
+    {
+        $user = Student::where('user_id', Auth::user()->id)->where('payment_status', 'paid')->first();
+        if($user)
+        {
+            return response()->json(['success' => 1, 'message' => 'User Info', 'data' => $user, 'payment' => 'paid' ]);
+        } else {            
+            return response()->json(['success' => 1, 'message' => 'User Info', 'data' => 'not-paid', 'payment' => 'not-paid' ]);
+        }
+    }
+
+    public function uploadReceipt(Request $request){
+        // return response()->json(['success' => 0, 'message' => gettype($request->receipt)]);
+        $imagg = $request->receipt;
+        $input = $request->all();
+        $rules = array(
+            'receipt' => 'required'
+        );
+
+        $validator = Validator::make($input, $rules);
+        if (!$validator->passes()) {
+            return response()->json(['success' => 0, 'message' => implode(",", $validator->errors()->all())]);
+        }
+
+        // return response()->json(['success' => 0, 'message' => $user]);
+        // $imgSplits=explode(",", $input['receipt']);
+        $startName=$request->id.rand();
+        $photo = $startName.uniqid() . ".jpg";
+        $decodedImage = base64_decode($input['receipt']);
+        $path='/receipt/' . $photo;
+        file_put_contents(public_path().'/receipt/'.$photo, $decodedImage);
+        $receipt = Student::where('user_id', Auth::user()->id)->update(['receipt' => $photo]);
+        return response()->json(['success' => 1, 'message' => 'receipt successfully sent', 'data'=> $receipt]);
+    }
+
+
 }

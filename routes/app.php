@@ -19,8 +19,14 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\Dashboard\DashboardOverviewController;
 use App\Http\Controllers\Api\Maceos\MACEOSController;
+use App\Http\Controllers\Api\Maceos\TestQuestionaireController;
+use App\Http\Controllers\Api\Maceos\ExamQuestionaireController;
+use App\Http\Controllers\Api\Maceos\ExamQuestionController;
+use App\Http\Controllers\Api\Maceos\TestQuestionController;
 use App\Http\Controllers\Api\Maceos\Course\CourseController;
+use App\Http\Controllers\Api\Maceos\Course\FrequentlyAskedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Imagick as Imagick;
@@ -74,17 +80,101 @@ Route::prefix("app")->group(function () {
     Route::middleware('auth:sanctum')->group(function() {
         Route::post('change-email', [AuthenticationController::class, 'changeEmail']);
         Route::post('change-phone-number', [AuthenticationController::class, 'changePhoneNumber']);
+        Route::get('is-paid-and-summary', [AuthenticationController::class, 'isPaidAndSummary']);
+        Route::post('upload-receipt', [AuthenticationController::class, 'uploadReceipt']);
     });
 
     // MACEOS
+    Route::get('course-faq/{id}', [FrequentlyAskedController::class, 'frequently_asked']);
+    Route::post('course-faq', [FrequentlyAskedController::class, 'create_asked_questions']);
+    Route::put('course-faq-update', [FrequentlyAskedController::class, 'edit_asked_questions']);
+    Route::delete('course-faq/{id}', [FrequentlyAskedController::class, 'delete_asked_questions']);
+
     Route::post('maceos-registration', [MACEOSController::class, 'ExistingUserRegistration']);
     Route::post('maceos-new-registration', [MACEOSController::class, 'NewRegistration']);
     Route::get('maceos-registration/{id}', [MACEOSController::class, 'UserInfo']);
 
+    Route::post('create-course', [CourseController::class, 'create_course']);
+    Route::get('all-course/{id}', [CourseController::class, 'all_courses']);  
+    Route::get('get-course', [CourseController::class, 'all_courses']);  
+    Route::put('update-course', [CourseController::class, 'edit_course']);  
+    Route::delete('remove-course/{id}', [CourseController::class, 'delete_course']); 
+    Route::post('upload-course-document', [CourseController::class, 'upload_course']);  
+    Route::put('remove-course-material', [CourseController::class, 'remove_course']);   
+    Route::get('test-questions', [TestQuestionController::class, 'test_questions']);  
+
+    Route::post('create-test-questionaire', [TestQuestionaireController::class, 'create_test_questionaire']);
+    Route::get('all-test-questionaires', [TestQuestionaireController::class, 'all_test_questionaire']);  
+    Route::get('get-test-questionaires', [TestQuestionaireController::class, 'create_test_questionaire']);  
+    Route::put('update-test-questionaires', [TestQuestionaireController::class, 'edit_test_questionaire']);  
+    Route::delete('remove-test-questionaires/{id}', [TestQuestionaireController::class, 'delete_test_questionaire']);   
+    Route::get('single-test-questionaires', [TestQuestionaireController::class, 'single_test_questionaire']);   
+
+    Route::post('create-test-question', [TestQuestionController::class, 'create_test_question']);
+    Route::get('all-test-question/{id}', [TestQuestionController::class, 'all_test_question']);  
+    Route::get('get-test-questionaires', [TestQuestionController::class, 'create_test_question']);  
+    Route::put('update-test-question', [TestQuestionController::class, 'edit_test_question']);  
+    Route::delete('remove-test-question/{id}', [TestQuestionController::class, 'delete_test_question']); 
+    
+    //  test theory questionaire
+    Route::post('create-test-theory-questionire', [TestQuestionaireController::class, 'create_test_questions_theory']);
+    Route::get('all-test-theory-questionaire', [TestQuestionaireController::class, 'all_test_questions_theory']);  
+    Route::get('all-test-theory-questionire/{id}', [TestQuestionaireController::class, 'all_test_theory_questions']);  
+    Route::put('update-test-theory-questionaire', [TestQuestionaireController::class, 'edit_test_theory_question']);  
+    Route::delete('remove-test-theory-questionaire/{id}', [TestQuestionaireController::class, 'delete_test_theory_question']);   
+    Route::get('single-test-theory-questionire', [TestQuestionaireController::class, 'single_test_questions_theory']);   
+    // end of test theory questionaire
+
+    // theory questions 
+    Route::post('create-test-theory-question', [TestQuestionController::class, 'create_test_questions_theory']);
+    Route::get('all-test-theory-questions/{id}', [TestQuestionController::class, 'all_test_theory_question']);  
+    Route::get('get-test-theory-questionaires', [TestQuestionController::class, 'create_test_questionaire_theory']);  
+    Route::put('update-test-theory-question', [TestQuestionController::class, 'edit_test_theory_question']);  
+    Route::delete('remove-test-theory-question/{id}', [TestQuestionController::class, 'delete_test_theory_question']);   
+    Route::get('single-test-theory-questionaires', [TestQuestionController::class, 'test_theory_questions']); 
+    // end of theory questions 
+
+    // exam objective questionaire
+    Route::post('create-exam-questionaire', [ExamQuestionaireController::class, 'create_exam_questionaire']);
+    Route::get('all-exam-questionaires', [ExamQuestionaireController::class, 'all_exam_questionaire']);  
+    Route::get('get-exam-questionaires', [ExamQuestionaireController::class, 'create_exam_questionaire']);  
+    Route::put('update-exam-questionaires', [ExamQuestionaireController::class, 'edit_exam_questionaire']);  
+    Route::delete('remove-exam-questionaires/{id}', [ExamQuestionaireController::class, 'delete_exam_questionaire']);   
+    Route::get('single-exam-questionaires', [ExamQuestionaireController::class, 'single_exam_questionaire']);  
+
+    // exam theory questionaire
+    Route::post('create-exam-theory-questionaire', [ExamQuestionaireController::class, 'create_exam_questionaire_theory']);
+    Route::get('all-exam-theory-questionaires', [ExamQuestionaireController::class, 'all_exam_questionaire_theory']);  
+    // end of exam objective  questionaire
+
+    // exam objective question
+    Route::post('create-exam-question', [ExamQuestionController::class, 'create_exam_question']);
+    Route::get('all-exam-question/{id}', [ExamQuestionController::class, 'all_exam_question']);   
+    Route::put('update-exam-question', [ExamQuestionController::class, 'edit_exam_question']);  
+    Route::delete('remove-exam-question/{id}', [ExamQuestionController::class, 'delete_exam_question']);  
+    // end exam objective question
+
+    // exam theory question
+    Route::post('create-exam-theory-question', [ExamQuestionController::class, 'create_exam_questions_theory']);
+    Route::get('all-exam-theory-question/{id}', [ExamQuestionController::class, 'all_exam_questionaire_theory']);  
+    Route::put('update-exam-theory-question', [ExamQuestionController::class, 'edit_exam_theory_question']); 
+    Route::delete('remove-exam-theory-question/{id}', [ExamQuestionController::class, 'delete_test_theory_question']);  
+    // end of exam theory question
+
+    // exam theory question
+    // Route::post('create-exam-theory-question', [ExamQuestionController::class, 'create_exam_questions_theory']);
+    // Route::get('all-exam-theory-question/{id}', [ExamQuestionController::class, 'all_exam_questionaire_theory']);  
+    // Route::get('get-exam-questionaires', [ExamQuestionController::class, 'create_exam_question']);  
+    // Route::put('update-exam-theory-question', [ExamQuestionController::class, 'edit_exam_theory_question']);  
+    // Route::delete('remove-exam-theory-question/{id}', [ExamQuestionController::class, 'delete_test_theory_question']);     
+    // exam theory question end
+
+    // Dashbaord
+    Route::get('dashboard-overview', [DashboardOverviewController::class, 'overview']);
+
     Route::get('sliders', [SliderController::class, 'index']);
     Route::get('qualifications', [AuthenticationController::class, 'qualifications']);
     Route::get('services', [AuthenticationController::class, 'services']);
-
 
         Route::prefix('ad')->group(function () {
             Route::get('list', [AdController::class, 'list']);
@@ -179,6 +269,7 @@ Route::prefix("app")->group(function () {
 
         Route::get('profile', [UserController::class, 'profile']);
         Route::post('profile', [UserController::class, 'updateProfile']);
+        Route::post('update-user-info', [UserController::class, 'updateUserInfo']);
         Route::post('change-password', [UserController::class, 'changePassword']);
 
         Route::prefix('swap')->group(function () {

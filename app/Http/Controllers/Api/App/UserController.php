@@ -27,6 +27,14 @@ class UserController extends Controller
     function profile()
     {   
         $followers = Follower::where('vendor', Auth::id())->count();
+        // $userProfile = User::select(
+        //                             [
+        //                                 'users.id', 'users.name', 'users.middlename',  'users.lastname', 'users.email', 'users.phoneno', 'users.type',
+        //                                 'students.company_name', 'students.company_address', 'students.specialization', 'students.academic',
+        //                             ]
+        //                             )
+        //                             ->join('students', 'studetns.user_id', '=', 'users.id')
+        //                             ->get();
         return response()->json(['success' => 1, 'message' => 'Fetched successfully', 'data'=>Auth::user(), 'company'=>Auth::user()->company, 'followers' => $followers]);
     }
 
@@ -69,6 +77,18 @@ class UserController extends Controller
         $user->refresh();
 
         return response()->json(['success' => 1, 'message' => 'Profile updated successfully', 'data'=>$user, 'company'=>$user->company]);
+    }
+
+    function updateUserInfo(Request $request)
+    {
+        $input = $request->all();
+        $id = $input['id'];
+        $firstname = $input['name'];
+        $lastname = $input['lastname'];
+        $email = $input['email'];
+        $phone = $input['phoneno'];
+        User::where('id', $id)->update(['name' => $firstname, 'lastname' => $lastname, 'email' => $email, 'phoneno' => $phone]);
+        return response()->json(['success' => 1, 'message' => 'Profile updated successfully', 'data'=>'' ]);
     }
 
     function changePassword(Request $request){

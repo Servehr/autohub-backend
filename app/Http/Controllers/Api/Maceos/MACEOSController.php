@@ -39,7 +39,12 @@ class MACEOSController extends Controller
             $student['birth'] = $input['birth'];
             $student['gender'] = $input['gender'];
             $student['academic'] = $input['academic'];
-            Student::create($student);  
+            $user = Student::create($student);  
+
+            $person['user_id'] = $input['user_id'];
+            $person['name'] = 'student';
+            $userPerson = Persin::create($person);
+
             return $this->sendSuccess(true, "Student Successfully Registered", "", "");
         } catch (\Throwable $th) {
             return $this->sendError('', "Failed", 500);
@@ -89,8 +94,22 @@ class MACEOSController extends Controller
 
     public function UserInfo($id)
     {
-        $userInfo = User::find($id);
-        return $this->sendSuccess(false, "User Information", $userInfo, "");
+        $userInfo = User::select(['users.id', 'users.name',  'users.lastname', 'users.middlename', 'users.email', 'users.phoneno', 'students.user_id', 'students.id'])
+            ->join('students', 'students.user_id', '=', 'users.id')
+            ->where('students.user_id', '=', $id)
+            ->first();
+        if($userInfo)
+        {
+            return $this->sendSuccess(true, "User Information", $userInfo, "student");
+        } else {
+            $userInformation = User::where('id', $id)->first();
+            if($userInformation)
+            {
+                return $this->sendSuccess(false, "User Information", $userInformation, "member");
+            } else {
+                return $this->sendSuccess(false, "User Information", 'none', "member");
+            }
+        }
     }
 
     // try

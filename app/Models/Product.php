@@ -25,6 +25,10 @@ class Product extends Model
         return $this->belongsTo('App\Models\Country','country_id','id');
     }
 
+    public function ijinle(){
+        return $this->belongsTo('App\Models\Ijinle','ijinle_id','id');
+    }
+
     public function lga(){
         return $this->belongsTo('App\Models\Lga','lga_id','id');
     }

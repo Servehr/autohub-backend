@@ -16,10 +16,12 @@ use App\Models\Product;
 use App\Models\State;
 use App\Models\Images;
 use App\Models\Transmission;
+use App\Models\Watchlist;
 use App\Models\Trim;
 use App\Models\User;
 use App\Models\Fuel;
 use App\Models\Country;
+use App\Models\Ijinle;
 use App\Models\Follower;
 use App\Notifications\notifyUser;
 use Illuminate\Http\Request;
@@ -147,6 +149,8 @@ class AdController extends Controller
         //     $pid['make_id']=$input['maker'];
         //     $pid['model_id']=$input['model'];
         // }
+        $countryN = Country::find($input['country']);
+        // return response()->json(['success' => 1, 'message' => 'Ad created successfully', 'data' => "", 'draft' => $countryN, 'status' => 'successful']);
 
         $pid['slug']=uniqid();
         $pid['avatar']="";
@@ -167,7 +171,10 @@ class AdController extends Controller
         $pid['fuel_type']=$input['fuel'];
         $pid['mileage']=$input['mileage'];
         $pid['country_id']=$input['country'];
+        $pid['ijinle_id']=$input['country'];
+        $pid['country_name']=$countryN->name;
         $pid['trim']=$input['trim'];
+        $pid['location']=$input['location'];
         $p=Product::create($pid);
 
         if($request->others != "")
@@ -392,11 +399,14 @@ class AdController extends Controller
         $color = Colour::find($request->colour);
         $carMake = CarMake::find($request->maker);
         $carModel = CarModel::find($request->model);
+        $country = Country::find($request->country);
         $title= $request->year_of_production ." " . $color->name ." ".$carMake->title." ". $carModel->title;
         // return response()->json(['success' => 1, 'message' => 'Product successfully updated', 'data'=>$title]);
         Product::where('id', $request->productId)->update(
             [
                 'country_id' => $request->country,
+                'ijinle_id' => $request->country,
+                'country_name' => $country->name,
                 'state_id' => $request->state,
                 'category_id' => $request->category,
                 'make_id' => $request->maker,
@@ -412,6 +422,7 @@ class AdController extends Controller
                 'price' => $request->price,
                 'mileage' => $request->mileage,
                 'title' => $title,
+                'location' => $request->location,
             ]
         );
         $data = Product::find($request->productId);
@@ -486,7 +497,7 @@ class AdController extends Controller
     function products($current_page,  $per_page)
     {
         $currentPage = intval($current_page);
-    	  $perPage = intval($per_page);
+    	$perPage = intval($per_page);
         $totalPages = DB::table('products')->count();
         $noOfPages = round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPage * $perPage)/$perPage) - 1) > 0);
@@ -587,8 +598,7 @@ class AdController extends Controller
         $totalPages = $product->count();
         $noOfPages = round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPage * $perPage)/$perPage) - 1) > 0);
-        $hasNextPage = ($noOfPages >= (($currentPage * $perPage)/$perPage) + 1);
-
+        $hasNextPage =  (($totalPages/$perPage) >= (($currentPage * $perPage)/$perPage));
 
         // if(((($currentPage * $perPage)/$perPage) < 1) || ($currentPage > 0))
         // {
@@ -614,7 +624,7 @@ class AdController extends Controller
         $totalPages = $products->count();
         $noOfPages = round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPagee * $perPagee)/$perPagee) - 1) > 0);
-        $hasNextPage =  (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
+        $hasNextPage =  (($totalPages/$perPage) > (($currentPagee * $perPagee)/$perPagee));
 
         // if(((($currentPagee * $perPagee)/$perPagee) < 1) || ($currentPagee > 0))
         // {
@@ -637,9 +647,9 @@ class AdController extends Controller
         $currentPagee = intval($currentPage);
         $products = Product::where('user_id', Auth::id())->where('status', 'pending')->where('draft',  'no')->get();
         $totalPages = $products->count();
-        $noOfPages = (($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
+        $noOfPages = round($totalPages/$perPage); //(($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPagee * $perPagee)/$perPagee) - 1) > 0);
-        $hasNextPage = (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
+        $hasNextPage = (($totalPages/$perPage) > (($currentPagee * $perPagee)/$perPagee));
 
         // if(((($currentPagee * $perPagee)/$perPagee) < 1) || ($currentPagee > 0))
         // {
@@ -662,9 +672,9 @@ class AdController extends Controller
         $currentPagee = intval($currentPage);
         $products = Product::where('user_id', Auth::id())->where('draft', 'yes')->get();
         $totalPages = $products->count();
-        $noOfPages = (($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
+        $noOfPages = round($totalPages/$perPage); //(($totalPages/$perPage) > $currentPagee) ? $currentPagee + 1 : round($totalPages/$perPage);
         $hasPreviousPage = (((($currentPagee * $perPagee)/$perPagee) - 1) > 0);
-        $hasNextPage = (($totalPages/$perPage) >= (($currentPagee * $perPagee)/$perPagee));
+        $hasNextPage = (($totalPages/$perPage) > (($currentPagee * $perPagee)/$perPagee));
 
         // if(((($currentPagee * $perPagee)/$perPagee) < 1) || ($currentPagee > 0))
         // {
@@ -725,7 +735,7 @@ class AdController extends Controller
 
     function allProductsUploaded()
     {
-        $data=Product::with('state', 'lga', 'country')->where('status', 'active')->where('draft', 'no')->orderBy('id', 'desc')->paginate(8);
+        $data=Product::with('state', 'lga', 'country', 'ijinle')->where('status', 'active')->where('draft', 'no')->orderBy('id', 'desc')->paginate(8);
         return response()->json(['success' => 1, 'message' => 'Fetched successfully', 'data'=>$data]);
     }
 
@@ -763,6 +773,7 @@ class AdController extends Controller
     {
        Product::where('id', $id)->delete(); // set deleted at
        Images::where('product_id', $id)->delete();
+       Watchlist::where('product_id', $id)->delete();
        return response()->json(['success' => 1, 'message' => 'Product successfully deleted']);
     }
 
